@@ -12,7 +12,7 @@ import (
 )
 
 type User struct {
-	ID   int    `json:"id"`
+	Id   int    `json:"id"`
 	Name string `json:"name"`
 	Email string `json:"email"`
 }
@@ -85,7 +85,7 @@ func getUsers(db *sql.DB) http.HandlerFunc {
 
 		for rows.Next() {
 			var u User
-			if err := rows.Scan(&u.ID, &u.Name, &u.Email); err != nil {
+			if err := rows.Scan(&u.Id, &u.Name, &u.Email); err != nil {
 				log.Fatal(err)
 			}
 			users = append(users, u)
@@ -103,11 +103,25 @@ func getUser(db *sql.DB) http.HandlerFunc {
 		id := vars["id"]
 
 		var u User
-		err := db.QueryRow("SELECT * FROM users WHERE id = $1", id).Scan(&u.ID, &u.Name, &u.Email)
+		err := db.QueryRow("SELECT * FROM users WHERE id = $1", id).Scan(&u.Id, &u.Name, &u.Email)
 		if err != nil {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
+		json.NewEncoder(w).Encode(u)
+	}
+}
+
+func createUser(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var u User
+		json.NewDecoder(r.Body).Decode(&u)
+
+		err := db.QueryRow("INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id", u.Name, u.Email).Scan(&u.Id)
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		json.NewEncoder(w).Encode(u)
 	}
 }
