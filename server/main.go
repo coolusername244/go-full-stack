@@ -127,7 +127,7 @@ func createUser(db *sql.DB) http.HandlerFunc {
 }
 
 func updateUser(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r*http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		var u User
 		json.NewDecoder(r.Body).Decode(&u)
 
@@ -140,7 +140,7 @@ func updateUser(db *sql.DB) http.HandlerFunc {
 		}
 
 		var updatedUser User
-		err = db.QueryRow("SELECT * FROM users WHERE id = $1", u.Id).Scan(&updatedUser.Id, &updatedUser.Name, &updatedUser.Email)
+		err = db.QueryRow("SELECT id, name, email FROM users WHERE id = $1", id).Scan(&updatedUser.Id, &updatedUser.Name, &updatedUser.Email)
 		if err != nil {
 			log.Fatal(err)
 		}
